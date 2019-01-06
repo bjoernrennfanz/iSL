@@ -1,15 +1,41 @@
-#include <unistd.h>
-#include <sys/mman.h>
+/*
+ * iSL (Subsystem for Linux) for iOS & Android
+ * Based on iSH (https://ish.app)
+ *
+ * Copyright (C) 2018 - 2019 Björn Rennfanz (bjoern@fam-rennfanz.de)
+ * Copyright (C) 2017 - 2019 Theodore Dubois (tblodt@icloud.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifdef _WIN32
+#   include "util/win32-unistd.h"
+#   include "util/win32-mman.h"
+#else
+#   include <unistd.h>
+#   include <sys/mman.h>
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 
 #define DEFAULT_CHANNEL memory
-#include "debug.h"
+#include "util/debug.h"
 #include "kernel/errno.h"
 #include "emu/memory.h"
-#include "jit/jit.h"
 
 // increment the change count
 static void mem_changed(struct mem *mem);
@@ -18,14 +44,13 @@ struct mem *mem_new() {
     struct mem *mem = malloc(sizeof(struct mem));
     if (mem == NULL)
         return NULL;
+
     mem->refcount = 1;
     mem->pgdir = calloc(MEM_PGDIR_SIZE, sizeof(struct pt_entry *));
     mem->pgdir_used = 0;
     mem->changes = 0;
     mem->start_brk = mem->brk = 0; // should get overwritten by exec
-#if JIT
-    mem->jit = jit_new(mem);
-#endif
+
     wrlock_init(&mem->lock);
     return mem;
 }
@@ -38,9 +63,7 @@ void mem_release(struct mem *mem) {
     if (--mem->refcount == 0) {
         write_wrlock(&mem->lock);
         pt_unmap(mem, 0, MEM_PAGES, PT_FORCE);
-#if JIT
-        jit_free(mem->jit);
-#endif
+
         for (int i = 0; i < MEM_PGDIR_SIZE; i++) {
             if (mem->pgdir[i] != NULL)
                 free(mem->pgdir[i]);
@@ -137,9 +160,6 @@ int pt_unmap(struct mem *mem, page_t start, pages_t pages, int force) {
     for (page_t page = start; page < start + pages; page++) {
         struct pt_entry *pt = mem_pt(mem, page);
         if (pt != NULL) {
-#if JIT
-            jit_invalidate_page(mem->jit, page);
-#endif
             struct data *data = pt->data;
             mem_pt_del(mem, page);
             if (--data->refcount == 0) {
@@ -239,10 +259,6 @@ void *mem_ptr(struct mem *mem, addr_t addr, int type) {
             memcpy(copy, data, PAGE_SIZE);
             pt_map(mem, page, 1, copy, entry->flags &~ P_COW);
         }
-#if JIT
-        // get rid of any compiled blocks in this page
-        jit_invalidate_page(mem->jit, page);
-#endif
     }
 
     if (entry == NULL)
@@ -252,5 +268,9 @@ void *mem_ptr(struct mem *mem, addr_t addr, int type) {
 
 size_t real_page_size;
 __attribute__((constructor)) static void get_real_page_size() {
+#ifdef _WIN32
+    real_page_size = (size_t) getpagesize();
+#else
     real_page_size = sysconf(_SC_PAGESIZE);
+#endif
 }

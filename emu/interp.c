@@ -37,8 +37,6 @@ static bool modrm_compute(struct cpu_state *cpu, struct tlb *tlb, addr_t *addr_o
     name = mem_read(cpu->eip, size); \
     cpu->eip += size/8
 
-#define TRACEIP() TRACE("%d %08x\t", current->pid, cpu->eip);
-
 #define SEG_GS() addr += cpu->tls_ptr
 
 // this is a completely insane way to turn empty into OP_SIZE and any other size into itself
@@ -495,7 +493,6 @@ static bool modrm_compute(struct cpu_state *cpu, struct tlb *tlb, addr_t *addr_o
 #define S SF
 
 // control transfer
-
 #define FIX_EIP \
     if (OP_SIZE == 16) \
         cpu->eip &= 0xffff

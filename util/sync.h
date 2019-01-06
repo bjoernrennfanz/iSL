@@ -1,8 +1,36 @@
+/*
+ * iSL (Subsystem for Linux) for iOS & Android
+ * Based on iSH (https://ish.app)
+ *
+ * Copyright (C) 2018 - 2019 Björn Rennfanz (bjoern@fam-rennfanz.de)
+ * Copyright (C) 2017 - 2019 Theodore Dubois (tblodt@icloud.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef UTIL_SYNC_H
 #define UTIL_SYNC_H
 
-#include <stdatomic.h>
-#include <pthread.h>
+#if defined(_MSC_VER)
+#   include "util/msvc-stdatomic.h"
+#   include "util/msvc-pthread.h"
+#else
+#   include <stdatomic.h>
+#   include <pthread.h>
+#endif
+#include "util/misc.h"
+
 #include <stdbool.h>
 #include <setjmp.h>
 
@@ -60,8 +88,8 @@ static inline void wrlock_init(wrlock_t *lock) {
 #define write_wrlock(lock) pthread_rwlock_wrlock(lock)
 #define write_wrunlock(lock) pthread_rwlock_unlock(lock)
 
-extern __thread sigjmp_buf unwind_buf;
-extern __thread bool should_unwind;
+extern thread_local sigjmp_buf unwind_buf;
+extern thread_local bool should_unwind;
 static inline int sigunwind_start() {
     if (sigsetjmp(unwind_buf, 1)) {
         should_unwind = true;

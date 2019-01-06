@@ -1,8 +1,29 @@
+/*
+ * iSL (Subsystem for Linux) for iOS & Android
+ * Based on iSH (https://ish.app)
+ *
+ * Copyright (C) 2018 - 2019 Björn Rennfanz (bjoern@fam-rennfanz.de)
+ * Copyright (C) 2017 - 2019 Theodore Dubois (tblodt@icloud.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef EMU_H
 #define EMU_H
 
 #include <stddef.h>
-#include "misc.h"
+#include "util/misc.h"
 #include "emu/float80.h"
 #include "emu/memory.h"
 
@@ -23,12 +44,12 @@ struct cpu_state {
     struct jit *jit;
 
     // assumes little endian (as does literally everything)
-#define _REG(n) \
+#define CPU_REG(n) \
     union { \
         dword_t e##n; \
         word_t n; \
-    };
-#define _REGX(n) \
+    }
+#define CPU_REGX(n) \
     union { \
         dword_t e##n##x; \
         word_t n##x; \
@@ -36,16 +57,16 @@ struct cpu_state {
             byte_t n##l; \
             byte_t n##h; \
         }; \
-    };
+    }
 
-    _REGX(a);
-    _REGX(b);
-    _REGX(c);
-    _REGX(d);
-    _REG(si);
-    _REG(di);
-    _REG(bp);
-    _REG(sp);
+    CPU_REGX(a);
+    CPU_REGX(b);
+    CPU_REGX(c);
+    CPU_REGX(d);
+    CPU_REG(si);
+    CPU_REG(di);
+    CPU_REG(bp);
+    CPU_REG(sp);
 #undef REGX
 #undef REG
 
@@ -87,6 +108,7 @@ struct cpu_state {
     // the stored result and operands
     dword_t res, op1, op2;
     union {
+        byte_t flags_res;
         struct {
             bits pf_res:1;
             bits zf_res:1;
@@ -98,7 +120,6 @@ struct cpu_state {
 #define ZF_RES (1 << 1)
 #define SF_RES (1 << 2)
 #define AF_OPS (1 << 3)
-        byte_t flags_res;
     };
 
     // fpu

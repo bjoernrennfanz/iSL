@@ -1,14 +1,40 @@
+/*
+ * iSL (Subsystem for Linux) for iOS & Android
+ * Based on iSH (https://ish.app)
+ *
+ * Copyright (C) 2018 - 2019 Björn Rennfanz (bjoern@fam-rennfanz.de)
+ * Copyright (C) 2017 - 2019 Theodore Dubois (tblodt@icloud.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include <stdatomic.h>
-#include <unistd.h>
+#ifdef _MSC_VER
+#   include "util/msvc-stdatomic.h"
+#else
+#   include <stdatomic.h>
+#   include <unistd.h>
+#endif
+#ifdef _WIN32
+#   include "util/win32-unistd.h"
+#endif
+
 #include "util/list.h"
 #include "util/sync.h"
-#include "misc.h"
-#if JIT
-struct jit;
-#endif
+#include "util/misc.h"
 
 // top 20 bits of an address, i.e. address >> 12
 typedef dword_t page_t;
@@ -24,9 +50,6 @@ struct mem {
     addr_t vdso; // immutable
     addr_t start_brk; // immutable
     addr_t brk;
-#if JIT
-    struct jit *jit;
-#endif
 
     wrlock_t lock;
 };
@@ -62,10 +85,8 @@ struct pt_entry {
     struct data *data;
     size_t offset;
     unsigned flags;
-#if JIT
-    struct list blocks[2];
-#endif
 };
+
 // page flags
 // P_READ and P_EXEC are ignored for now
 #define P_READ (1 << 0)

@@ -1,12 +1,13 @@
 TEMPLATE = lib
-CONFIG += staticlib c++11 c11
+CONFIG += staticlib c++11
 
 SOURCES += \
     memory.c \
     tlb.c \
-    fpu.c \
+    interp.c \
+    uint128.c \
     float80.c \
-    interp.c
+    fpu.c
 
 HEADERS += \
     cpu.h \
@@ -20,7 +21,8 @@ HEADERS += \
     memory.h \
     modrm.h \
     regid.h \
-    tlb.h
+    tlb.h \
+    uint128.h
 
 INCLUDEPATH += \
     ..

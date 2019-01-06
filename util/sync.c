@@ -1,3 +1,24 @@
+/*
+ * iSL (Subsystem for Linux) for iOS & Android
+ * Based on iSH (https://ish.app)
+ *
+ * Copyright (C) 2018 - 2019 Björn Rennfanz (bjoern@fam-rennfanz.de)
+ * Copyright (C) 2017 - 2019 Theodore Dubois (tblodt@icloud.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <errno.h>
 #include <limits.h>
 #include "kernel/task.h"
@@ -72,8 +93,8 @@ void notify_once(cond_t *cond) {
     pthread_cond_signal(&cond->cond);
 }
 
-__thread sigjmp_buf unwind_buf;
-__thread bool should_unwind = false;
+thread_local sigjmp_buf unwind_buf;
+thread_local bool should_unwind = false;
 
 void sigusr1_handler() {
     if (should_unwind) {

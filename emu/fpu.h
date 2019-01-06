@@ -1,6 +1,30 @@
+/*
+ * iSL (Subsystem for Linux) for iOS & Android
+ * Based on iSH (https://ish.app)
+ *
+ * Copyright (C) 2018 - 2019 Björn Rennfanz (bjoern@fam-rennfanz.de)
+ * Copyright (C) 2017 - 2019 Theodore Dubois (tblodt@icloud.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef EMU_FPU_H
 #define EMU_FPU_H
+
+#include <math.h>
 #include "emu/float80.h"
+
 struct cpu_state;
 
 typedef float float32;
@@ -15,6 +39,7 @@ enum fpu_const {
     fconst_ln2 = 5,
     fconst_zero = 6,
 };
+
 static float80 fpu_consts[] = {
     [fconst_one]   = (float80) {.signif = 0x8000000000000000, .signExp = 0x3fff},
     [fconst_log2t] = (float80) {.signif = 0xd49a784bcd1b8afe, .signExp = 0x4000},
