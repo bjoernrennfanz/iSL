@@ -8,7 +8,7 @@
 #include "misc.h"
 #include "kernel/calls.h"
 #include "kernel/random.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 #include "fs/fd.h"
 #include "kernel/elf.h"
 #include "kernel/vdso.h"

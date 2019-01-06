@@ -2,7 +2,7 @@
 #define FS_PROC_H
 
 #include "fs/stat.h"
-#include "misc.h"
+#include "util/misc.h"
 
 struct proc_entry {
     struct proc_dir_entry *meta;

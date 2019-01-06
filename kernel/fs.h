@@ -1,13 +1,15 @@
 #ifndef FS_H
 #define FS_H
 
-#include "misc.h"
+#include "util/misc.h"
 #include "util/list.h"
+#include "util/qtdbwrapper.h"
+
 #include "fs/stat.h"
 #include "fs/dev.h"
+
 #include "emu/memory.h"
 #include <dirent.h>
-#include <sqlite3.h>
 
 struct fs_info {
     atomic_uint refcount;
@@ -75,16 +77,16 @@ struct mount {
     union {
         void *data;
         struct {
-            sqlite3 *db;
+            qtsqldb *db;
             struct {
-                sqlite3_stmt *begin;
-                sqlite3_stmt *commit;
-                sqlite3_stmt *rollback;
-                sqlite3_stmt *read_stat;
-                sqlite3_stmt *write_stat;
-                sqlite3_stmt *delete_stat;
-                sqlite3_stmt *write_path;
-                sqlite3_stmt *delete_path;
+                qtsqlquery *begin;
+                qtsqlquery *commit;
+                qtsqlquery *rollback;
+                qtsqlquery *read_stat;
+                qtsqlquery *write_stat;
+                qtsqlquery *delete_stat;
+                qtsqlquery *write_path;
+                qtsqlquery *delete_path;
             } stmt;
             lock_t lock;
         };

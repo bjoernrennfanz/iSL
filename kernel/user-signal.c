@@ -1,8 +1,10 @@
-#include "debug.h"
+#include "util/debug.h"
+
 #include <string.h>
 #include <signal.h>
+
 #include "kernel/calls.h"
-#include "kernel/signal.h"
+#include "kernel/user-signal.h"
 #include "kernel/vdso.h"
 
 int xsave_extra = 0;

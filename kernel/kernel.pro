@@ -3,7 +3,6 @@ CONFIG += staticlib c++11
 
 SOURCES += \
     init.c \
-    errno.c \
     calls.c \
     user.c \
     vdso.c \
@@ -19,7 +18,6 @@ SOURCES += \
     tls.c \
     futex.c \
     getset.c \
-    signal.c \
     resource.c \
     random.c \
     prctl.c \
@@ -27,21 +25,23 @@ SOURCES += \
     fs.c \
     fs_info.c \
     poll.c \
-    epoll.c
+    epoll.c \
+    user-signal.c \
+    user-errno.c
 
 HEADERS += \
     calls.h \
     elf.h \
-    errno.h \
     fs.h \
     futex.h \
     init.h \
     random.h \
     resource.h \
-    signal.h \
     task.h \
     time.h \
-    vdso.h
+    vdso.h \
+    user-signal.h \
+    user-errno.h
 
 INCLUDEPATH += \
     ..

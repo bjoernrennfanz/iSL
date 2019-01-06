@@ -8,7 +8,7 @@
 #include "kernel/calls.h"
 #include "util/sync.h"
 #include "kernel/task.h"
-#include "misc.h"
+#include "util/misc.h"
 
 #define LOG_BUF_SHIFT 20
 static char log_buf[1 << LOG_BUF_SHIFT];
@@ -126,8 +126,8 @@ static void output_line(const char *line) {
 void vprintk(const char *msg, va_list args) {
     // format the message
     // I'm trusting you to not pass an absurdly long message
-    static __thread char buf[4096] = "";
-    static __thread size_t buf_size = 0;
+    static thread_local char buf[4096] = "";
+    static thread_local size_t buf_size = 0;
     buf_size += vsprintf(buf + buf_size, msg, args);
 
     // output up to the last newline, leave the rest in the buffer

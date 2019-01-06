@@ -4,10 +4,10 @@
 #endif
 #include "debug.h"
 #include <time.h>
-#include <signal.h>
+#include <user-signal.h>
 #include <sys/time.h>
 #include "kernel/calls.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 #include "kernel/resource.h"
 #include "fs/poll.h"
 

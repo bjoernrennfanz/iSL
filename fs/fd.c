@@ -2,7 +2,7 @@
 #include <string.h>
 #include "debug.h"
 #include "kernel/task.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 #include "kernel/resource.h"
 #include "kernel/fs.h"
 #include "fs/poll.h"

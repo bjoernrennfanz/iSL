@@ -1,7 +1,7 @@
 #ifndef FS_STAT_H
 #define FS_STAT_H
 
-#include "misc.h"
+#include "util/misc.h"
 
 struct statbuf {
     qword_t dev;

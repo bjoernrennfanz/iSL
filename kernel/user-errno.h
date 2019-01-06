@@ -4,7 +4,6 @@
 #include <errno.h>
 
 // stolen from asm-generic/errno-base.h
-
 #define _EPERM          -1 /* Operation not permitted */
 #define _ENOENT         -2 /* No such file or directory */
 #define _ESRCH          -3 /* No such process */
@@ -111,7 +110,6 @@
 #define _EISNAM       -120 /* Is a named type file */
 #define _EREMOTEIO    -121 /* Remote I/O error */
 #define _EDQUOT       -122 /* Quota exceeded */
-
 
 int err_map(int err);
 int errno_map(void);

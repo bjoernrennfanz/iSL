@@ -1,7 +1,9 @@
-#ifndef SIGNAL_H
-#define SIGNAL_H
+#ifndef USERSIGNAL_H
+#define USERSIGNAL_H
 
-#include "misc.h"
+#include "util/misc.h"
+#include "util/sync.h"
+
 struct task;
 
 typedef qword_t sigset_t_;
@@ -183,4 +185,4 @@ struct sigframe_ {
 extern int xsave_extra;
 extern int fxsave_extra;
 
-#endif
+#endif // USERSIGNAL_H

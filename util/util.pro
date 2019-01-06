@@ -1,10 +1,12 @@
 TEMPLATE = lib
 CONFIG += staticlib c++11 c11
+QT += sql
 
 SOURCES += \
     sync.c \
     timer.c \
-    win32-mman.c
+    win32-mman.c \
+    qtdbwrapper.cpp
 
 HEADERS += \
     bits.h \
@@ -16,7 +18,8 @@ HEADERS += \
     msvc-pthread.h \
     debug.h \
     win32-mman.h \
-    win32-unistd.h
+    win32-unistd.h \
+    qtdbwrapper.h
 
 INCLUDEPATH += \
     ..

@@ -1,12 +1,19 @@
 #ifndef SYS_SOCK_H
 #define SYS_SOCK_H
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include "kernel/errno.h"
-#include "misc.h"
-#include "debug.h"
+#ifdef _WIN32
+#   include <mswsock.h>
+#   include <winsock2.h>
+#   include <ws2tcpip.h>
+#else
+#   include <sys/socket.h>
+#   include <netinet/in.h>
+#   include <netinet/tcp.h>
+#endif
+#include "kernel/user-errno.h"
+
+#include "util/misc.h"
+#include "util/debug.h"
 
 dword_t sys_socketcall(dword_t call_num, addr_t args_addr);
 
@@ -33,6 +40,10 @@ struct iovec_ {
   addr_t iov_base;
   uint_t iov_len;
 };
+
+#ifdef _WIN32
+#   define PF_LOCAL AF_UNIX
+#endif
 
 #define PF_LOCAL_ 1
 #define PF_INET_ 2
@@ -82,6 +93,10 @@ static inline int sock_type_to_real(int type, int protocol) {
     return -1;
 }
 
+#ifdef _WIN32
+#   define MSG_DONTWAIT 0x0
+#   define MSG_EOR  0 // Not supported.
+#endif
 #define MSG_OOB_ 0x1
 #define MSG_PEEK_ 0x2
 #define MSG_CTRUNC_  0x8

@@ -1,6 +1,8 @@
 #ifndef PATH_H
 #define PATH_H
 
+#include <stdbool.h>
+
 #define AT_PWD (struct fd *) -2
 
 // Normalizes the path specified and writes the result into the out buffer.

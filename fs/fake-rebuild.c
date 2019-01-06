@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sqlite3.h>
+
 #include "kernel/fs.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
+
 #include "util/list.h"
-#include "debug.h"
+#include "util/debug.h"
 
 // rebuild process in pseudocode:
 //

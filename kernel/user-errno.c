@@ -1,7 +1,8 @@
-#include "debug.h"
+#include "util/debug.h"
 #include "kernel/task.h"
-#include "kernel/signal.h"
-#include "kernel/errno.h"
+#include "kernel/user-signal.h"
+#include "kernel/user-errno.h"
+#include <signal.h>
 
 int err_map(int err) {
 #define ERRCASE(err) \

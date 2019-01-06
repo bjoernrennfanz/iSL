@@ -7,7 +7,7 @@
 #include "fs/path.h"
 #include "fs/dev.h"
 #include "kernel/task.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 
 struct mount *find_mount_and_trim_path(char *path) {
     struct mount *mount = mount_find(path);

@@ -1,5 +1,5 @@
 #include <pthread.h>
-#include <signal.h>
+#include <user-signal.h>
 #include "kernel/calls.h"
 #include "kernel/futex.h"
 #include "fs/fd.h"

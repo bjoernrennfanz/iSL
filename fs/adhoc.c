@@ -2,7 +2,7 @@
 #include "debug.h"
 #include "kernel/fs.h"
 #include "fs/fd.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 
 static struct mount adhoc_mount;
 

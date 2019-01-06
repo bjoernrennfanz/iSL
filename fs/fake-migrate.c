@@ -1,6 +1,6 @@
 #include "kernel/fs.h"
 #include "debug.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 
 // The value of the user_version pragma is used to decide what needs migrating.
 

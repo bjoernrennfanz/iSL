@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include "emu/cpu.h"
 #include "kernel/fs.h"
-#include "kernel/signal.h"
+#include "kernel/user-signal.h"
 #include "kernel/resource.h"
 #include "util/list.h"
 #include "util/timer.h"
@@ -66,8 +66,8 @@ struct task {
 };
 
 // current will always give the process that is currently executing
-// if I have to stop using __thread, current will become a macro
-extern __thread struct task *current;
+// if I have to stop using thread_local, current will become a macro
+extern thread_local struct task *current;
 
 // Creates a new process, initializes most fields from the parent. Specify
 // parent as NULL to create the init process. Returns NULL if out of memory.

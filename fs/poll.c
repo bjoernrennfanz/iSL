@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include "misc.h"
 #include "util/list.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 #include "kernel/fs.h"
 #include "fs/fd.h"
 #include "fs/poll.h"

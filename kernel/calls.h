@@ -2,13 +2,13 @@
 #define CALLS_H
 
 #include "kernel/task.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 #include "fs/fd.h"
 #include "fs/dev.h"
 #include "kernel/fs.h"
-#include "misc.h"
+#include "util/misc.h"
 
-#include "kernel/signal.h"
+#include "kernel/user-signal.h"
 #include "fs/sock.h"
 #include "kernel/time.h"
 #include "kernel/resource.h"

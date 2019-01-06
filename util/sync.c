@@ -22,9 +22,12 @@
 #include <errno.h>
 #include <limits.h>
 #include "kernel/task.h"
+#include "kernel/user-errno.h"
 #include "util/sync.h"
 #include "debug.h"
-#include "kernel/errno.h"
+#ifdef _WIN32
+#   include <windows.h>
+#endif
 
 void cond_init(cond_t *cond) {
     pthread_condattr_t attr;
@@ -34,6 +37,7 @@ void cond_init(cond_t *cond) {
 #endif
     pthread_cond_init(&cond->cond, &attr);
 }
+
 void cond_destroy(cond_t *cond) {
     pthread_cond_destroy(&cond->cond);
 }
@@ -48,6 +52,7 @@ int wait_for(cond_t *cond, lock_t *lock, struct timespec *timeout) {
         return _EINTR;
     return 0;
 }
+
 int wait_for_ignore_signals(cond_t *cond, lock_t *lock, struct timespec *timeout) {
     if (current) {
         lock(&current->waiting_cond_lock);
@@ -59,9 +64,19 @@ int wait_for_ignore_signals(cond_t *cond, lock_t *lock, struct timespec *timeout
     if (!timeout) {
         pthread_cond_wait(&cond->cond, &lock->m);
     } else {
-#if __linux__
+#if defined(__linux__) || defined(_WIN32)
         struct timespec abs_timeout;
+#if defined (__linux__)
         clock_gettime(CLOCK_MONOTONIC, &abs_timeout);
+#else
+        int64_t wintime;
+        GetSystemTimeAsFileTime((FILETIME*)&wintime);
+
+        wintime -=116444736000000000; //1jan1601 to 1jan1970
+        abs_timeout.tv_sec = wintime / 10000000; //seconds
+        abs_timeout.tv_nsec = wintime % 10000000 * 100; //nano-seconds
+#endif
+
         abs_timeout.tv_sec += timeout->tv_sec;
         abs_timeout.tv_nsec += timeout->tv_nsec;
         if (abs_timeout.tv_nsec > 1000000000) {
@@ -89,6 +104,7 @@ int wait_for_ignore_signals(cond_t *cond, lock_t *lock, struct timespec *timeout
 void notify(cond_t *cond) {
     pthread_cond_broadcast(&cond->cond);
 }
+
 void notify_once(cond_t *cond) {
     pthread_cond_signal(&cond->cond);
 }
@@ -102,15 +118,3 @@ void sigusr1_handler() {
         siglongjmp(unwind_buf, 1);
     }
 }
-
-/*
-int foo() {
-    if (sigunwind_start()) {
-        int retval = syscall();
-        sigunwind_end();
-        return retval;
-    } else {
-        return _EINTR;
-    }
-}
-*/

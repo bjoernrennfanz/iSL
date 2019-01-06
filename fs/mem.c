@@ -1,5 +1,5 @@
 #include <string.h>
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 #include "kernel/random.h"
 #include "fs/mem.h"
 #include "fs/dev.h"

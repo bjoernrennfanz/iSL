@@ -34,7 +34,7 @@
 
 #define DEFAULT_CHANNEL memory
 #include "util/debug.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 #include "emu/memory.h"
 
 // increment the change count

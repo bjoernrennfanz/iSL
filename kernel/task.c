@@ -5,7 +5,7 @@
 #include "kernel/task.h"
 #include "emu/memory.h"
 
-__thread struct task *current;
+thread_local struct task *current;
 
 static struct pid pids[MAX_PID + 1] = {};
 lock_t pids_lock = LOCK_INITIALIZER;

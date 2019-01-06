@@ -2,7 +2,7 @@
 TEMPLATE = app
 TARGET = iSL
 
-QT += qml quick core
+QT += qml quick core sql
 CONFIG += c++11
 
 SOURCES += \

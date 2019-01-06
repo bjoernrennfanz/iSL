@@ -9,7 +9,7 @@
 #include <sys/xattr.h>
 #include <sys/file.h>
 
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 #include "kernel/calls.h"
 #include "kernel/fs.h"
 #include "fs/dev.h"

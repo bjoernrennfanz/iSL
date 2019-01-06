@@ -3,7 +3,7 @@
 #include <limits.h>
 
 #include "kernel/calls.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 #include "kernel/fs.h"
 #include "fs/fd.h"
 #include "fs/path.h"

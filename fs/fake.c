@@ -7,7 +7,7 @@
 #include <sqlite3.h>
 
 #include "debug.h"
-#include "kernel/errno.h"
+#include "kernel/user-errno.h"
 #include "kernel/task.h"
 #include "fs/fd.h"
 #include "fs/dev.h"

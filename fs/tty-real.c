@@ -4,7 +4,7 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <pthread.h>
-#include <signal.h>
+#include <user-signal.h>
 
 #include "kernel/calls.h"
 #include "fs/tty.h"
