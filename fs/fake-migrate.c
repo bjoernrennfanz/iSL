@@ -1,5 +1,5 @@
 #include "kernel/fs.h"
-#include "debug.h"
+#include "util/debug.h"
 #include "kernel/user-errno.h"
 
 // The value of the user_version pragma is used to decide what needs migrating.
@@ -17,32 +17,32 @@ static struct migration {
 int fakefs_migrate(struct mount *mount) {
     int err;
 #define CHECK_ERR() \
-    if (err != SQLITE_OK && err != SQLITE_ROW && err != SQLITE_DONE) \
-        die("sqlite error while migrating: %s\n", sqlite3_errmsg(mount->db));
+    if (err != QTSQL_OK && err != QTSQL_ROW && err != QTSQL_DONE) \
+        die("sqlite error while migrating: %s\n", qtsql_errmsg(mount->db));
 #define EXEC(sql) \
-    err = sqlite3_exec(mount->db, sql, NULL, NULL, NULL); \
+    err = qtsql_exec(mount->db, sql, NULL, NULL, NULL); \
     CHECK_ERR();
 #define PREPARE(sql) ({ \
-    sqlite3_stmt *stmt; \
-    err = sqlite3_prepare_v2(mount->db, sql, -1, &stmt, NULL); \
+    qtsqlquery *stmt; \
+    err = qtsql_prepare(mount->db, sql, -1, &stmt, NULL); \
     CHECK_ERR(); \
     stmt; \
 })
 #define STEP(stmt) ({ \
-    err = sqlite3_step(stmt); \
+    err = qtsql_step(stmt); \
     CHECK_ERR(); \
-    err == SQLITE_ROW; \
+    err == QTSQL_ROW; \
 })
 #define RESET(stmt) \
-    err = sqlite3_reset(stmt); \
+    err = qtsql_reset(stmt); \
     CHECK_ERR()
 #define FINALIZE(stmt) \
-    err = sqlite3_finalize(stmt); \
+    err = qtsql_finalize(stmt); \
     CHECK_ERR()
 
-    sqlite3_stmt *user_version = PREPARE("pragma user_version");
+    qtsqlquery *user_version = PREPARE("pragma user_version");
     STEP(user_version);
-    int version = sqlite3_column_int(user_version, 0);
+    int version = qtsql_column_int(user_version, 0);
     FINALIZE(user_version);
 
     EXEC("begin");
@@ -56,9 +56,10 @@ int fakefs_migrate(struct mount *mount) {
         version++;
     }
     // for some reason placeholders aren't allowed in pragmas
-    char *pragma_user_version = sqlite3_mprintf("pragma user_version = %d", version);
-    EXEC(pragma_user_version);
-    sqlite3_free(pragma_user_version);
+    char pragma_user_version_sql[30];
+    sprintf(&pragma_user_version_sql[0], "pragma user_version = %d", version);
+    EXEC(&pragma_user_version_sql[0]);
+
     EXEC("commit");
 
     return 0;

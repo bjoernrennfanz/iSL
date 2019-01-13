@@ -32,27 +32,27 @@ struct entry {
 int fakefs_rebuild(struct mount *mount) {
     int err;
 #define CHECK_ERR() \
-    if (err != SQLITE_OK && err != SQLITE_ROW && err != SQLITE_DONE) \
-        die("sqlite error while rebuilding: %s\n", sqlite3_errmsg(mount->db))
+    if (err != QTSQL_OK && err != QTSQL_ROW && err != QTSQL_DONE) \
+        die("sqlite error while rebuilding: %s\n", qtsql_errmsg(mount->db))
 #define EXEC(sql) \
-    err = sqlite3_exec(mount->db, sql, NULL, NULL, NULL); \
+    err = qtsql_exec(mount->db, sql, NULL, NULL, NULL); \
     CHECK_ERR();
 #define PREPARE(sql) ({ \
-    sqlite3_stmt *stmt; \
-    sqlite3_prepare_v2(mount->db, sql, -1, &stmt, NULL); \
+    qtsqlquery *stmt; \
+    qtsql_prepare(mount->db, sql, -1, &stmt, NULL); \
     CHECK_ERR(); \
     stmt; \
 })
 #define STEP(stmt) ({ \
-    err = sqlite3_step(stmt); \
+    err = qtsql_step(stmt); \
     CHECK_ERR(); \
-    err == SQLITE_ROW; \
+    err == QTSQL_ROW; \
 })
 #define RESET(stmt) \
-    err = sqlite3_reset(stmt); \
+    err = qtsql_reset(stmt); \
     CHECK_ERR()
 #define FINALIZE(stmt) \
-    err = sqlite3_finalize(stmt); \
+    err = qtsql_finalize(stmt); \
     CHECK_ERR()
 
     EXEC("begin");
@@ -61,19 +61,19 @@ int fakefs_rebuild(struct mount *mount) {
     EXEC("create table paths (path blob primary key, inode integer)");
     EXEC("create table stats (inode integer primary key, stat blob)");
 
-    sqlite3_stmt *get_paths = PREPARE("select path, inode from paths_old");
-    sqlite3_stmt *read_stat = PREPARE("select stat from stats_old where inode = ?");
-    sqlite3_stmt *write_path = PREPARE("insert into paths (path, inode) values (?, ?)");
-    sqlite3_stmt *write_stat = PREPARE("replace into stats (inode, stat) values (?, ?)");
+    qtsqlquery *get_paths = PREPARE("select path, inode from paths_old");
+    qtsqlquery *read_stat = PREPARE("select stat from stats_old where inode = ?");
+    qtsqlquery *write_path = PREPARE("insert into paths (path, inode) values (?, ?)");
+    qtsqlquery *write_stat = PREPARE("replace into stats (inode, stat) values (?, ?)");
 
     struct list hashtable[2000];
 #define HASH_SIZE (sizeof(hashtable)/sizeof(hashtable[0]))
     for (unsigned i = 0; i < HASH_SIZE; i++)
         list_init(&hashtable[i]);
 
-    while (sqlite3_step(get_paths) == SQLITE_ROW) {
-        const char *path = (const char *) sqlite3_column_text(get_paths, 0);
-        ino_t inode = sqlite3_column_int64(get_paths, 1);
+    while (qtsql_step(get_paths) == QTSQL_ROW) {
+        const char *path = (const char *) qtsql_column_text(get_paths, 0);
+        ino_t inode = qtsql_column_int64(get_paths, 1);
 
         // grab real inode
         struct stat stat;
@@ -102,21 +102,21 @@ int fakefs_rebuild(struct mount *mount) {
         }
 
         // extract the stat so we can copy it
-        err = sqlite3_bind_int64(read_stat, 1, inode); CHECK_ERR();
+        err = qtsql_bind_int64(read_stat, 1, inode); CHECK_ERR();
         if (STEP(read_stat) == false) {
             RESET(read_stat);
             continue;
         }
-        const void *stat_data = sqlite3_column_blob(read_stat, 0);
-        size_t stat_data_size = sqlite3_column_bytes(read_stat, 0);
+        const void *stat_data = qtsql_column_blob(read_stat, 0);
+        size_t stat_data_size = qtsql_column_bytes(read_stat, 0);
 
         // store all the information in the new database
-        err = sqlite3_bind_blob(write_path, 1, path, strlen(path), SQLITE_TRANSIENT); CHECK_ERR();
-        err = sqlite3_bind_int64(write_path, 2, real_inode); CHECK_ERR();
+        err = qtsql_bind_blob(write_path, 1, path, strlen(path), QTSQL_TRANSIENT); CHECK_ERR();
+        err = qtsql_bind_int64(write_path, 2, real_inode); CHECK_ERR();
         STEP(write_path);
         RESET(write_path);
-        err = sqlite3_bind_int64(write_stat, 1, real_inode); CHECK_ERR();
-        err = sqlite3_bind_blob(write_stat, 2, stat_data, stat_data_size, SQLITE_TRANSIENT);
+        err = qtsql_bind_int64(write_stat, 1, real_inode); CHECK_ERR();
+        err = qtsql_bind_blob(write_stat, 2, stat_data, stat_data_size, QTSQL_TRANSIENT);
         STEP(write_stat);
         RESET(write_stat);
 

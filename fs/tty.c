@@ -1,5 +1,5 @@
 #define DEFAULT_CHANNEL debug
-#include "debug.h"
+#include "util/debug.h"
 #include <string.h>
 #include "kernel/calls.h"
 #include "fs/poll.h"

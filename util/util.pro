@@ -6,7 +6,8 @@ SOURCES += \
     sync.c \
     timer.c \
     win32-mman.c \
-    qtdbwrapper.cpp
+    qtdbwrapper.cpp \
+    mingw-compat.c
 
 HEADERS += \
     bits.h \
@@ -19,7 +20,8 @@ HEADERS += \
     debug.h \
     win32-mman.h \
     win32-unistd.h \
-    qtdbwrapper.h
+    qtdbwrapper.h \
+    mingw-compat.h
 
 INCLUDEPATH += \
     ..

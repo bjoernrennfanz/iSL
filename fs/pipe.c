@@ -1,7 +1,15 @@
-#include <unistd.h>
+
+#if defined(__MINGW32__)
+#   include "util/mingw-compat.h"
+#elif defined(_MSC_VER)
+#   error MSVC Platform need to defined
+#else
+#   include <unistd.h>
+#endif
+
 #include "kernel/calls.h"
 #include "fs/fd.h"
-#include "debug.h"
+#include "util/debug.h"
 
 static fd_t pipe_f_create(int pipe_fd, int flags) {
     struct fd *fd = adhoc_fd_create();

@@ -3,7 +3,11 @@
 
 #include <sys/types.h>
 #if __linux__
-#include <sys/sysmacros.h>
+#   include <sys/sysmacros.h>
+#elif __WIN32
+#   define major(dev) ((int)(((dev) >> 8) & 0xff))
+#   define minor(dev) ((int)((dev) & 0xff))
+#   define makedev(major, minor) ((dev_t)(((major) << 8) | (minor)))
 #endif
 #include "fs/fd.h"
 
@@ -14,11 +18,13 @@
 typedef uint32_t dev_t_;
 
 static inline dev_t_ dev_make(int major, int minor) {
-    return ((minor & 0xfff00) << 12) | (major << 8) | (minor & 0xff);
+    return ((dev_t_)(((minor & 0xfff00) << 12) | (major << 8) | (minor & 0xff)));
 }
+
 static inline int dev_major(dev_t_ dev) {
     return (dev & 0xfff00) >> 8;
 }
+
 static inline int dev_minor(dev_t_ dev) {
     return ((dev & 0xfff00000) >> 12) | (dev & 0xff);
 }
@@ -26,6 +32,7 @@ static inline int dev_minor(dev_t_ dev) {
 static inline dev_t dev_real_from_fake(dev_t_ dev) {
     return makedev(dev_major(dev), dev_minor(dev));
 }
+
 static inline dev_t_ dev_fake_from_real(dev_t dev) {
     return dev_make(major(dev), minor(dev));
 }

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "misc.h"
+#include "util/misc.h"
 #include "kernel/calls.h"
 #include "kernel/random.h"
 #include "kernel/user-errno.h"

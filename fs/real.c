@@ -1,12 +1,20 @@
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <termios.h>
-#include <sys/mman.h>
-#include <sys/xattr.h>
+
+#ifdef __MINGW32__
+#   include "util/mingw-compat.h"
+#   include "util/win32-mman.h"
+#elif defined(__MSC_VER)
+#   error Error MSVC not implemented
+#else
+#   include <fcntl.h>
+#   include <sys/ioctl.h>
+#   include <termios.h>
+#   include <sys/mman.h>
+#   include <sys/xattr.h>
+#endif
 #include <sys/file.h>
 
 #include "kernel/user-errno.h"
@@ -16,7 +24,7 @@
 #include "fs/tty.h"
 
 static int getpath(int fd, char *buf) {
-#if defined(__linux__)
+#if defined(__linux__) || defined(__WIN32)
     char proc_fd[20];
     sprintf(proc_fd, "/proc/self/fd/%d", fd);
     ssize_t size = readlink(proc_fd, buf, MAX_PATH - 1);
@@ -39,10 +47,12 @@ const char *fix_path(const char *path) {
 // temporarily change directory and block other threads from doing so
 // useful for simulating mknodat on ios, dealing with long unix socket paths, etc
 lock_t fchdir_lock;
+
 static void lock_fchdir(int dirfd) {
     lock(&fchdir_lock);
     fchdir(dirfd);
 }
+
 static void unlock_fchdir() {
     unlock(&fchdir_lock);
 }

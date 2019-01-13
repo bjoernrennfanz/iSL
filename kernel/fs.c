@@ -1,4 +1,3 @@
-#include "debug.h"
 #include <string.h>
 #include <sys/stat.h>
 #include "kernel/calls.h"
@@ -8,6 +7,7 @@
 #include "fs/fd.h"
 #include "fs/path.h"
 #include "fs/dev.h"
+#include "util/debug.h"
 
 static struct fd *at_fd(fd_t f) {
     if (f == AT_FDCWD_)

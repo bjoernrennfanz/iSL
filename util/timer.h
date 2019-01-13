@@ -2,13 +2,14 @@
 #define UTIL_TIMER_H
 
 #include <stdbool.h>
-#include <time.h>
 #include <pthread.h>
+#include <pthread_time.h>
 #include "util/sync.h"
 
 static inline struct timespec timespec_now() {
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now); // can't fail, according to posix spec
+
     return now;
 }
 

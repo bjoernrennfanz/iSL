@@ -2,6 +2,7 @@
 #define SYS_ERRNO_H
 
 #include <errno.h>
+#include "util/mingw-compat.h"
 
 // stolen from asm-generic/errno-base.h
 #define _EPERM          -1 /* Operation not permitted */

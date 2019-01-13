@@ -1,6 +1,8 @@
 #ifndef TIME_H
 #define TIME_H
-#include "misc.h"
+
+#include "util/misc.h"
+#include "fs/fd.h"
 
 dword_t sys_time(addr_t time_out);
 #define CLOCK_REALTIME_ 0

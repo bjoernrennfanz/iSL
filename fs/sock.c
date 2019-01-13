@@ -1,10 +1,11 @@
 #include <string.h>
-// #include <sys/socket.h>
 #include <sys/stat.h>
 
 #include "kernel/calls.h"
+
 #include "fs/fd.h"
 #include "fs/sock.h"
+
 #include "util/debug.h"
 
 static struct fd_ops socket_fdops;

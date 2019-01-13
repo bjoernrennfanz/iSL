@@ -1,4 +1,4 @@
-#include "debug.h"
+#include "util/debug.h"
 #include "kernel/task.h"
 #include "fs/fd.h"
 #include "kernel/calls.h"

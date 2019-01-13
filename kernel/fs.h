@@ -24,8 +24,13 @@ void fs_info_release(struct fs_info *fs);
 
 void fs_chdir(struct fs_info *fs, struct fd *pwd);
 
-#define MAX_PATH 4096
-#define MAX_NAME 256
+#ifndef MAX_PATH
+#   define MAX_PATH 4096
+#endif
+
+#ifndef MAX_NAME
+#   define MAX_NAME 256
+#endif
 
 struct attr {
     enum attr_type {

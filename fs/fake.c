@@ -4,9 +4,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/file.h>
-#include <sqlite3.h>
 
-#include "debug.h"
+#include "util/qtdbwrapper.h"
+#include "util/debug.h"
+
 #include "kernel/user-errno.h"
 #include "kernel/task.h"
 #include "fs/fd.h"
@@ -22,35 +23,35 @@ struct ish_stat {
 };
 
 static void db_check_error(struct mount *mount) {
-    int errcode = sqlite3_errcode(mount->db);
+    int errcode = qtsql_errcode(mount->db);
     switch (errcode) {
-        case SQLITE_OK:
-        case SQLITE_ROW:
-        case SQLITE_DONE:
+        case QTSQL_OK:
+        case QTSQL_ROW:
+        case QTSQL_DONE:
             break;
 
         default:
-            die("sqlite error: %s", sqlite3_errmsg(mount->db));
+            die("qt database wrapper error: %s", qtsql_errmsg(mount->db));
     }
 }
 
-static sqlite3_stmt *db_prepare(struct mount *mount, const char *stmt) {
-    sqlite3_stmt *statement;
-    sqlite3_prepare_v2(mount->db, stmt, strlen(stmt) + 1, &statement, NULL);
+static qtsqlquery *db_prepare(struct mount *mount, const char *stmt) {
+    qtsqlquery *statement;
+    qtsql_prepare(mount->db, stmt, (int)strlen(stmt) + 1, &statement, NULL);
     db_check_error(mount);
     return statement;
 }
 
-static bool db_exec(struct mount *mount, sqlite3_stmt *stmt) {
-    int err = sqlite3_step(stmt);
+static bool db_exec(struct mount *mount, qtsqlquery *stmt) {
+    int err = qtsql_step(stmt);
     db_check_error(mount);
-    return err == SQLITE_ROW;
+    return err == QTSQL_ROW;
 }
-static void db_reset(struct mount *mount, sqlite3_stmt *stmt) {
-    sqlite3_reset(stmt);
+static void db_reset(struct mount *mount, qtsqlquery *stmt) {
+    qtsql_reset(stmt);
     db_check_error(mount);
 }
-static void db_exec_reset(struct mount *mount, sqlite3_stmt *stmt) {
+static void db_exec_reset(struct mount *mount, qtsqlquery *stmt) {
     db_exec(mount, stmt);
     db_reset(mount, stmt);
 }
@@ -75,15 +76,16 @@ static ino_t inode_for_path(struct mount *mount, const char *path) {
         // uses it for an error return and darwin uses it to mark deleted
         // directory entries (and maybe also for error returns, I don't know).
         return 0;
+
     return stat.st_ino;
 }
 
 static ino_t write_path(struct mount *mount, const char *path) {
     ino_t inode = inode_for_path(mount, path);
     if (inode != 0) {
-        sqlite3_bind_blob(mount->stmt.write_path, 1, path, strlen(path), SQLITE_TRANSIENT);
+        qtsql_bind_blob(mount->stmt.write_path, 1, path, strlen(path), QTSQL_TRANSIENT);
         db_check_error(mount);
-        sqlite3_bind_int64(mount->stmt.write_path, 2, inode);
+        qtsql_bind_int64(mount->stmt.write_path, 2, inode);
         db_check_error(mount);
         db_exec_reset(mount, mount->stmt.write_path);
     }
@@ -91,7 +93,7 @@ static ino_t write_path(struct mount *mount, const char *path) {
 }
 
 static void delete_path(struct mount *mount, const char *path) {
-    sqlite3_bind_blob(mount->stmt.delete_path, 1, path, strlen(path), SQLITE_TRANSIENT);
+    qtsql_bind_blob(mount->stmt.delete_path, 1, path, strlen(path), QTSQL_TRANSIENT);
     db_check_error(mount);
     db_exec_reset(mount, mount->stmt.delete_path);
 }
@@ -100,14 +102,14 @@ static bool read_stat(struct mount *mount, const char *path, struct ish_stat *st
     ino_t inode = inode_for_path(mount, path);
     if (inode == 0)
         return false;
-    sqlite3_bind_int64(mount->stmt.read_stat, 1, inode);
+    qtsql_bind_int64(mount->stmt.read_stat, 1, inode);
     db_check_error(mount);
     bool has_result = db_exec(mount, mount->stmt.read_stat);
     if (!has_result) {
         db_reset(mount, mount->stmt.read_stat);
         return false;
     }
-    const struct ish_stat *db_stat = sqlite3_column_blob(mount->stmt.read_stat, 0);
+    const struct ish_stat *db_stat = qtsql_column_blob(mount->stmt.read_stat, 0);
     if (stat != NULL)
         *stat = *db_stat;
     db_reset(mount, mount->stmt.read_stat);
@@ -117,15 +119,15 @@ static bool read_stat(struct mount *mount, const char *path, struct ish_stat *st
 static void write_stat(struct mount *mount, const char *path, struct ish_stat *stat) {
     ino_t inode = write_path(mount, path);
     assert(inode != 0);
-    sqlite3_bind_int64(mount->stmt.write_stat, 1, inode);
+    qtsql_bind_int64(mount->stmt.write_stat, 1, inode);
     db_check_error(mount);
-    sqlite3_bind_blob(mount->stmt.write_stat, 2, stat, sizeof(*stat), SQLITE_TRANSIENT);
+    qtsql_bind_blob(mount->stmt.write_stat, 2, stat, sizeof(*stat), QTSQL_TRANSIENT);
     db_check_error(mount);
     db_exec_reset(mount, mount->stmt.write_stat);
 }
 
 static void delete_inode_stat(struct mount *mount, ino_t inode) {
-    sqlite3_bind_int64(mount->stmt.delete_stat, 1, inode);
+    qtsql_bind_int64(mount->stmt.delete_stat, 1, inode);
     db_check_error(mount);
     db_exec_reset(mount, mount->stmt.delete_stat);
 }
@@ -386,7 +388,7 @@ int fakefs_migrate(struct mount *mount);
 
 #if DEBUG_sql
 static int trace_callback(unsigned why, void *fuck, void *stmt, void *sql) {
-    printk("sql trace: %s\n", sqlite3_expanded_sql(stmt));
+    printk("sql trace: %s\n", qtsql_expanded_sql(stmt));
     return 0;
 }
 #endif
@@ -398,32 +400,32 @@ static int fakefs_mount(struct mount *mount) {
     assert(strcmp(basename, "data") == 0);
     strcpy(basename, "meta.db");
 
-    // check if it is in fact a sqlite database
+    // check if it is in fact a qt database wrapper database
     char buf[16] = {};
     int dbf = open(db_path, O_RDONLY);
     if (dbf < 0)
         return errno_map();
     read(dbf, buf, sizeof(buf));
     close(dbf);
-    if (strncmp(buf, "SQLite format 3", 15) != 0)
+    if (strncmp(buf, "qt database wrapper format 3", 15) != 0)
         return _EINVAL;
 
-    int err = sqlite3_open_v2(db_path, &mount->db, SQLITE_OPEN_READWRITE, NULL);
-    if (err != SQLITE_OK) {
-        printk("error opening database: %s\n", sqlite3_errmsg(mount->db));
-        sqlite3_close(mount->db);
+    int err = qtsql_open_v2(db_path, &mount->db, QTSQL_OPEN_READWRITE, NULL);
+    if (err != QTSQL_OK) {
+        printk("error opening database: %s\n", qtsql_errmsg(mount->db));
+        qtsql_close(mount->db);
         return _EINVAL;
     }
 
     // let's do WAL mode
-    sqlite3_stmt *statement = db_prepare(mount, "pragma journal_mode=wal");
+    qtsqlquery *statement = db_prepare(mount, "pragma journal_mode=wal");
     db_check_error(mount);
-    sqlite3_step(statement);
+    qtsql_step(statement);
     db_check_error(mount);
-    sqlite3_finalize(statement);
+    qtsql_finalize(statement);
 
 #if DEBUG_sql
-    sqlite3_trace_v2(mount->db, SQLITE_TRACE_STMT, trace_callback, NULL);
+    qtsql_trace_v2(mount->db, QTSQL_TRACE_STMT, trace_callback, NULL);
 #endif
 
     // do this now so fakefs_rebuild can use mount->root_fd
@@ -443,9 +445,9 @@ static int fakefs_mount(struct mount *mount) {
     if (stat(db_path, &statbuf) < 0) ERRNO_DIE("stat database");
     ino_t db_inode = statbuf.st_ino;
     statement = db_prepare(mount, "select db_inode from meta");
-    if (sqlite3_step(statement) == SQLITE_ROW) {
-        if (sqlite3_column_int64(statement, 0) != db_inode) {
-            sqlite3_finalize(statement);
+    if (qtsql_step(statement) == QTSQL_ROW) {
+        if (qtsql_column_int64(statement, 0) != db_inode) {
+            qtsql_finalize(statement);
             statement = NULL;
             int err = fakefs_rebuild(mount);
             if (err < 0) {
@@ -455,15 +457,15 @@ static int fakefs_mount(struct mount *mount) {
         }
     }
     if (statement != NULL)
-        sqlite3_finalize(statement);
+        qtsql_finalize(statement);
 
     // save current inode
     statement = db_prepare(mount, "update meta set db_inode = ?");
-    sqlite3_bind_int64(statement, 1, db_inode);
+    qtsql_bind_int64(statement, 1, db_inode);
     db_check_error(mount);
-    sqlite3_step(statement);
+    qtsql_step(statement);
     db_check_error(mount);
-    sqlite3_finalize(statement);
+    qtsql_finalize(statement);
 
     lock_init(&mount->lock);
     mount->stmt.begin = db_prepare(mount, "begin");
@@ -480,7 +482,7 @@ static int fakefs_mount(struct mount *mount) {
 
 static int fakefs_umount(struct mount *mount) {
     if (mount->db)
-        sqlite3_close(mount->db);
+        qtsql_close(mount->db);
     /* return realfs.umount(mount); */
     return 0;
 }
